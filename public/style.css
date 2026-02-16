@@ -175,13 +175,19 @@ body {
 /* =============================================
    Widgets Container
    ============================================= */
+.dashboard-main {
+  max-width: 1000px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
 .widgets {
   display: flex;
   gap: 40px;
   flex-wrap: wrap;
-  justify-content: center;
-  max-width: 1000px;
-  margin: 0 auto 20px;
+  justify-content: flex-start;
 }
 
 .widget {
@@ -363,10 +369,8 @@ body {
 .main-content {
   display: flex;
   gap: 40px;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: flex-start;
-  max-width: 1000px;
-  margin: 0 auto;
 }
 
 /* =============================================
