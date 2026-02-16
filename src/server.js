@@ -64,7 +64,7 @@ app.get("/domains", (req, res) => {
   }
 });
 
-// Proxmox API proxy endpoint
+// Proxmox API proxy endpoint - uses fast cluster/resources endpoint (like homarr)
 app.get("/api/pve/status", async (req, res) => {
   const { sessionKey } = req.query;
   if (!sessionKey) return res.status(401).json({ success: false, message: "Unauthorized" });
@@ -75,30 +75,133 @@ app.get("/api/pve/status", async (req, res) => {
   }
 
   try {
-    const { host, tokenId, tokenSecret, node, verifySsl } = pveConfig;
-    const endpoints = [
-      { key: "node", path: `/api2/json/nodes/${node}/status` },
-      { key: "vms", path: `/api2/json/nodes/${node}/qemu` },
-      { key: "containers", path: `/api2/json/nodes/${node}/lxc` },
-    ];
-
-    const results = await Promise.all(
-      endpoints.map(({ key, path: apiPath }) =>
-        pveRequest(host, apiPath, tokenId, tokenSecret, verifySsl).then((data) => ({ key, data }))
-      )
-    );
-
-    const status = {};
-    results.forEach(({ key, data }) => {
-      status[key] = data;
-    });
-
-    res.json({ success: true, data: status });
+    const { host, tokenId, tokenSecret, verifySsl } = pveConfig;
+    
+    // Single cluster/resources call for fast CPU/memory/disk stats
+    const resources = await pveRequest(host, "/api2/json/cluster/resources", tokenId, tokenSecret, verifySsl);
+    
+    // Map resources by type (same approach as homarr)
+    const clusterInfo = mapClusterResources(resources);
+    
+    // Fetch temperature data for online nodes (requires node status endpoint)
+    await Promise.all(clusterInfo.nodes.map(async (node) => {
+      if (node.isRunning) {
+        try {
+          const nodeStatus = await pveRequest(host, `/api2/json/nodes/${node.name}/status`, tokenId, tokenSecret, verifySsl);
+          console.log(`Node ${node.name} thermalstate:`, nodeStatus.thermalstate);
+          node.thermalstate = nodeStatus.thermalstate || null;
+          node.cpuinfo = nodeStatus.cpuinfo || null;
+        } catch (e) {
+          console.error(`Thermal fetch error for ${node.name}:`, e.message);
+        }
+      }
+    }));
+    
+    res.json({ success: true, data: clusterInfo });
   } catch (err) {
     console.error("Proxmox API error:", err.message);
     res.status(500).json({ success: false, message: "Failed to fetch Proxmox status" });
   }
 });
+
+// Map cluster resources to structured data (ported from homarr)
+function mapClusterResources(resources) {
+  const mapped = {
+    nodes: [],
+    vms: [],
+    containers: [],
+    storages: [],
+  };
+
+  for (const r of resources) {
+    switch (r.type) {
+      case "node":
+        mapped.nodes.push({
+          id: r.id,
+          name: r.node || "",
+          status: r.status || "offline",
+          isRunning: r.status === "online",
+          cpu: {
+            utilization: r.cpu || 0,      // 0-1 value
+            cores: r.maxcpu || 0,
+          },
+          memory: {
+            used: r.mem || 0,
+            total: r.maxmem || 0,
+          },
+          storage: {
+            used: r.disk || 0,
+            total: r.maxdisk || 0,
+          },
+          uptime: r.uptime || 0,
+        });
+        break;
+
+      case "qemu":
+        mapped.vms.push({
+          id: r.id,
+          vmId: r.vmid || 0,
+          name: r.name || "",
+          node: r.node || "",
+          status: r.status || "stopped",
+          isRunning: r.status === "running",
+          cpu: {
+            utilization: r.cpu || 0,
+            cores: r.maxcpu || 0,
+          },
+          memory: {
+            used: r.mem || 0,
+            total: r.maxmem || 0,
+          },
+          storage: {
+            used: r.disk || 0,
+            total: r.maxdisk || 0,
+          },
+          uptime: r.uptime || 0,
+        });
+        break;
+
+      case "lxc":
+        mapped.containers.push({
+          id: r.id,
+          vmId: r.vmid || 0,
+          name: r.name || "",
+          node: r.node || "",
+          status: r.status || "stopped",
+          isRunning: r.status === "running",
+          cpu: {
+            utilization: r.cpu || 0,
+            cores: r.maxcpu || 0,
+          },
+          memory: {
+            used: r.mem || 0,
+            total: r.maxmem || 0,
+          },
+          storage: {
+            used: r.disk || 0,
+            total: r.maxdisk || 0,
+          },
+          uptime: r.uptime || 0,
+        });
+        break;
+
+      case "storage":
+        mapped.storages.push({
+          id: r.id,
+          name: r.storage || "",
+          node: r.node || "",
+          status: r.status || "offline",
+          isRunning: r.status === "available",
+          used: r.disk || 0,
+          total: r.maxdisk || 0,
+          isShared: r.shared === 1,
+        });
+        break;
+    }
+  }
+
+  return mapped;
+}
 
 // Proxmox API request helper
 function pveRequest(host, apiPath, tokenId, tokenSecret, verifySsl) {

@@ -2,6 +2,5 @@
   "host": "https://your-proxmox-host.example.com",
   "tokenId": "user@pve!tokenname",
   "tokenSecret": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-  "node": "pve",
   "verifySsl": false
 }

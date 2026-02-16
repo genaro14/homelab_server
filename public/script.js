@@ -294,15 +294,33 @@
   // =========================================================================
   const ProxmoxWidget = {
     sessionKey: null,
+    refreshInterval: null,
+    REFRESH_INTERVAL_MS: 5000, // 5 seconds (same as homarr)
 
     init(sessionKey) {
       this.sessionKey = sessionKey;
       elements.pveRefresh.addEventListener("click", () => this.refresh());
       this.refresh();
+      this.startAutoRefresh();
+    },
+
+    startAutoRefresh() {
+      if (this.refreshInterval) clearInterval(this.refreshInterval);
+      this.refreshInterval = setInterval(() => this.refresh(), this.REFRESH_INTERVAL_MS);
+    },
+
+    stopAutoRefresh() {
+      if (this.refreshInterval) {
+        clearInterval(this.refreshInterval);
+        this.refreshInterval = null;
+      }
     },
 
     async refresh() {
-      elements.pveStatus.innerHTML = '<p class="pve-status__loading">Loading...</p>';
+      // Don't show loading state on auto-refresh to avoid flicker
+      if (!this.refreshInterval) {
+        elements.pveStatus.innerHTML = '<p class="pve-status__loading">Loading...</p>';
+      }
 
       try {
         const data = await ApiService.fetchPveStatus(this.sessionKey);
@@ -314,49 +332,43 @@
     },
 
     render(data) {
-      const { node, vms = [], containers = [] } = data;
+      // New cluster/resources data structure (like homarr)
+      const { nodes = [], vms = [], containers = [], storages = [] } = data;
+      
+      // Render all nodes
+      const nodesHtml = nodes.map((node) => {
+        const cpuPercent = (node.cpu.utilization * 100).toFixed(1);
+        const memUsed = this.formatBytes(node.memory.used);
+        const memTotal = this.formatBytes(node.memory.total);
+        const memPercent = node.memory.total > 0 
+          ? ((node.memory.used / node.memory.total) * 100).toFixed(1) : 0;
+        const diskUsed = this.formatBytes(node.storage.used);
+        const diskTotal = this.formatBytes(node.storage.total);
+        const diskPercent = node.storage.total > 0 
+          ? ((node.storage.used / node.storage.total) * 100).toFixed(1) : 0;
+        const uptime = this.formatUptime(node.uptime);
+        const statusClass = node.isRunning ? "pve-node__status--online" : "pve-node__status--offline";
 
-      // CPU
-      const cpuPercent = node?.cpu ? (node.cpu * 100).toFixed(1) : 0;
-      const cpuModel = node?.cpuinfo?.model || "Unknown CPU";
+        // Temperature from thermalstate
+        const thermal = node.thermalstate || {};
+        const pkgTemp = thermal["Package.id.0"] || null;
+        const coreTemps = Object.entries(thermal)
+          .filter(([k]) => k.startsWith("Core"))
+          .map(([, v]) => parseInt(v))
+          .filter((v) => !isNaN(v));
+        const avgTemp = coreTemps.length > 0 
+          ? Math.round(coreTemps.reduce((a, b) => a + b, 0) / coreTemps.length) 
+          : null;
 
-      // Temperature
-      const thermal = node?.thermalstate || {};
-      const pkgTemp = thermal["Package.id.0"] || null;
-      const coreTemps = Object.entries(thermal)
-        .filter(([k]) => k.startsWith("Core"))
-        .map(([, v]) => parseInt(v))
-        .filter((v) => !isNaN(v));
-      const avgTemp = coreTemps.length > 0 
-        ? Math.round(coreTemps.reduce((a, b) => a + b, 0) / coreTemps.length) 
-        : null;
-
-      // Memory
-      const memUsed = node?.memory?.used ? this.formatBytes(node.memory.used) : "0";
-      const memTotal = node?.memory?.total ? this.formatBytes(node.memory.total) : "0";
-      const memPercent = node?.memory?.used && node?.memory?.total 
-        ? ((node.memory.used / node.memory.total) * 100).toFixed(1) : 0;
-
-      // Disk
-      const diskUsed = node?.rootfs?.used ? this.formatBytes(node.rootfs.used) : "0";
-      const diskTotal = node?.rootfs?.total ? this.formatBytes(node.rootfs.total) : "0";
-      const diskPercent = node?.rootfs?.used && node?.rootfs?.total 
-        ? ((node.rootfs.used / node.rootfs.total) * 100).toFixed(1) : 0;
-
-      // System info
-      const kernel = node?.kversion ? node.kversion.split(" ")[1] || node.kversion : "Unknown";
-      const uptime = node?.uptime ? this.formatUptime(node.uptime) : "Unknown";
-
-      const html = `
-        <div class="pve-grid">
+        return `
           <article class="pve-node">
             <header class="pve-node__header">
-              <span class="pve-node__name">Node: nas</span>
-              <span class="pve-node__status">Online</span>
+              <span class="pve-node__name">Node: ${this.escapeHtml(node.name)}</span>
+              <span class="pve-node__status ${statusClass}">${node.isRunning ? "Online" : "Offline"}</span>
             </header>
             
             <div class="pve-gauges">
-              ${this.renderGauge("CPU", cpuPercent)}
+              ${this.renderGauge("CPU", cpuPercent, `${node.cpu.cores} cores`)}
               ${this.renderGauge("RAM", memPercent, `${memUsed} / ${memTotal}`)}
               ${this.renderGauge("Disk", diskPercent, `${diskUsed} / ${diskTotal}`)}
               ${this.renderTempGauge(pkgTemp, avgTemp)}
@@ -364,25 +376,87 @@
 
             <div class="pve-info">
               <div class="pve-info__item">
-                <span class="pve-info__label">CPU</span>
-                <span class="pve-info__value">${this.escapeHtml(cpuModel)}</span>
-              </div>
-              <div class="pve-info__item">
-                <span class="pve-info__label">Kernel</span>
-                <span class="pve-info__value">${this.escapeHtml(kernel)}</span>
-              </div>
-              <div class="pve-info__item">
                 <span class="pve-info__label">Uptime</span>
                 <span class="pve-info__value">${uptime}</span>
               </div>
             </div>
           </article>
+        `;
+      }).join("");
+
+      const html = `
+        <div class="pve-grid">
+          ${nodesHtml || '<p class="pve-status__empty">No nodes found</p>'}
         </div>
-        ${this.renderVmList("Virtual Machines", vms)}
-        ${this.renderVmList("Containers", containers)}
+        ${this.renderVmListNew("Virtual Machines", vms)}
+        ${this.renderVmListNew("Containers", containers)}
+        ${this.renderStorageList(storages)}
       `;
 
       elements.pveStatus.innerHTML = html;
+    },
+
+    renderVmListNew(title, items) {
+      if (!items || items.length === 0) return "";
+
+      const itemsHtml = items
+        .sort((a, b) => (a.name || "").localeCompare(b.name || ""))
+        .map((item) => {
+          const indicatorClass = item.isRunning ? "pve-vm__indicator--running" : "pve-vm__indicator--stopped";
+          const cpuPercent = (item.cpu.utilization * 100).toFixed(1);
+          const memUsage = item.memory.total 
+            ? this.formatBytes(item.memory.used) + " / " + this.formatBytes(item.memory.total) 
+            : "";
+
+          return `
+            <div class="pve-vm">
+              <span class="pve-vm__name">
+                <span class="pve-vm__indicator ${indicatorClass}"></span>
+                ${this.escapeHtml(item.name || `ID: ${item.vmId}`)}
+              </span>
+              <span class="pve-vm__cpu">${item.isRunning ? cpuPercent + "%" : ""}</span>
+              <span class="pve-vm__resources">${memUsage}</span>
+            </div>
+          `;
+        })
+        .join("");
+
+      return `
+        <div class="pve-vms">
+          <h3 class="pve-vms__title">${title}</h3>
+          <div class="pve-vm-list">${itemsHtml}</div>
+        </div>
+      `;
+    },
+
+    renderStorageList(storages) {
+      if (!storages || storages.length === 0) return "";
+
+      const itemsHtml = storages
+        .filter((s) => s.isRunning)
+        .sort((a, b) => (a.name || "").localeCompare(b.name || ""))
+        .map((storage) => {
+          const usedPercent = storage.total > 0 
+            ? ((storage.used / storage.total) * 100).toFixed(1) 
+            : 0;
+          const usedStr = this.formatBytes(storage.used);
+          const totalStr = this.formatBytes(storage.total);
+
+          return `
+            <div class="pve-storage">
+              <span class="pve-storage__name">${this.escapeHtml(storage.name)}</span>
+              <span class="pve-storage__usage">${usedStr} / ${totalStr} (${usedPercent}%)</span>
+            </div>
+          `;
+        })
+        .join("");
+
+      return `
+        <div class="pve-storages">
+          <h3 class="pve-vms__title">Storage</h3>
+          <div class="pve-storage-list">${itemsHtml}</div>
+        </div>
+      `;
     },
 
     renderGauge(label, percent, detail = null) {
@@ -408,7 +482,6 @@
       if (temp > 80) colorClass = "pve-gauge--danger";
       else if (temp > 60) colorClass = "pve-gauge--warning";
 
-      // Scale temp to percentage (0-100°C range)
       const percent = Math.min(temp, 100);
 
       return `
@@ -432,58 +505,6 @@
       if (hours > 0) parts.push(`${hours}h`);
       if (mins > 0) parts.push(`${mins}m`);
       return parts.join(" ") || "0m";
-    },
-
-    renderStat(label, percent, detail = null) {
-      const value = parseFloat(percent) || 0;
-      let fillClass = "";
-      if (value > 80) fillClass = "pve-stat__fill--danger";
-      else if (value > 60) fillClass = "pve-stat__fill--warning";
-
-      const detailHtml = detail ? `<span class="pve-stat__detail">${detail}</span>` : "";
-
-      return `
-        <div class="pve-stat">
-          <div class="pve-stat__header">
-            <span>${label}</span>
-            <span class="pve-stat__value">${value.toFixed(1)}%</span>
-          </div>
-          ${detailHtml}
-          <div class="pve-stat__bar">
-            <div class="pve-stat__fill ${fillClass}" style="width: ${value}%"></div>
-          </div>
-        </div>
-      `;
-    },
-
-    renderVmList(title, items) {
-      if (!items || items.length === 0) return "";
-
-      const itemsHtml = items
-        .sort((a, b) => (a.name || "").localeCompare(b.name || ""))
-        .map((item) => {
-          const isRunning = item.status === "running";
-          const indicatorClass = isRunning ? "pve-vm__indicator--running" : "pve-vm__indicator--stopped";
-          const memUsage = item.maxmem ? this.formatBytes(item.mem || 0) + " / " + this.formatBytes(item.maxmem) : "";
-
-          return `
-            <div class="pve-vm">
-              <span class="pve-vm__name">
-                <span class="pve-vm__indicator ${indicatorClass}"></span>
-                ${this.escapeHtml(item.name || `ID: ${item.vmid}`)}
-              </span>
-              <span class="pve-vm__resources">${memUsage}</span>
-            </div>
-          `;
-        })
-        .join("");
-
-      return `
-        <div class="pve-vms">
-          <h3 class="pve-vms__title">${title}</h3>
-          <div class="pve-vm-list">${itemsHtml}</div>
-        </div>
-      `;
     },
 
     formatBytes(bytes) {
