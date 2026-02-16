@@ -15,7 +15,7 @@ app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, "../public")));
 app.use(require("cors")());
 
-const USER = "box";
+const USER = "root";
 const PASSWORD_HASH = crypto.createHash("sha256").update("purple123").digest("hex");
 
 // Load Proxmox config

@@ -21,11 +21,11 @@ npm run dev
 ## 
 Populate env sample files with your credentials and run the app
 
-`/src/pve.json` for PVE credentials
-`/scr/domains.json` for domain list  
++ `/src/pve.json` for PVE credentials
++ `/scr/domains.json` for domain list  
 
 See samples for data example
-
++ Default User: 'root' and Password: 'purple123', change them in `/src/server.js`
 ## Docker
 
 ```bash
