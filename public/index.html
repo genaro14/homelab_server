@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GP DEV</title>
+    <link rel="icon" href="favicon.ico" />
+    <link rel="shortcut icon" href="favicon.ico" />
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+  </head>
+  <body>
+    <!-- Auth Section -->
+    <section id="authSection" class="auth-section">
+      <div class="auth-card">
+        <h1 class="auth-title">Login</h1>
+        <form id="loginForm" class="auth-form">
+          <input type="text" id="username" placeholder="Username" autocomplete="username" required />
+          <input type="password" id="password" placeholder="Password" autocomplete="current-password" required />
+          <button type="submit" class="btn btn--primary">Login</button>
+          <p id="loginError" class="auth-error hidden"></p>
+        </form>
+      </div>
+    </section>
+
+    <!-- Dashboard Section (visible after login) -->
+    <section id="dashboardSection" class="dashboard-section hidden">
+      <nav class="navbar">
+        <span class="navbar__title">GP DEV</span>
+        <button type="button" id="logoutBtn" class="btn btn--logout">Logout</button>
+      </nav>
+
+      <div class="dashboard-content">
+        <section class="widgets">
+          <article class="widget widget--calendar">
+            <header class="widget__header">
+              <button type="button" id="calPrev" class="widget__nav" aria-label="Previous month">&lt;</button>
+              <h2 id="calTitle" class="widget__title"></h2>
+              <button type="button" id="calNext" class="widget__nav" aria-label="Next month">&gt;</button>
+            </header>
+            <div class="calendar__weekdays">
+              <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+            </div>
+            <div id="calDays" class="calendar__days"></div>
+          </article>
+
+          <article class="widget widget--weather">
+            <p class="weather__city">Buenos Aires</p>
+            <p id="weatherTemp" class="weather__temp">--°C</p>
+            <p id="weatherDesc" class="weather__desc">Loading...</p>
+          </article>
+        </section>
+
+        <div class="main-content">
+          <section class="pve-section">
+            <header class="pve-header">
+              <h2 class="pve-header__title">Proxmox Status</h2>
+              <button type="button" id="pveRefresh" class="btn btn--icon" aria-label="Refresh">↻</button>
+            </header>
+            <div id="pveStatus" class="pve-status">
+              <p class="pve-status__loading">Loading...</p>
+            </div>
+          </section>
+
+          <section class="domains-section">
+            <h2 class="section-title">Quick Links</h2>
+            <nav id="domainNav" class="domain-nav"></nav>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <script src="script.js"></script>
+  </body>
+</html>

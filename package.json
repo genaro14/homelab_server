@@ -1,0 +1,27 @@
+{
+  "name": "domain-dashboard",
+  "version": "1.0.0",
+  "description": "Simple domain list dashboard",
+  "main": "app.js",
+  "scripts": {
+    "dev": "node app.js",
+    "lint": "eslint src/ public/*.js",
+    "lint:fix": "eslint src/ public/*.js --fix",
+    "format": "prettier --write \"src/**/*.js\" \"public/**/*.js\"",
+    "format:check": "prettier --check \"src/**/*.js\" \"public/**/*.js\""
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^2.2.2",
+    "cors": "^2.8.6",
+    "crypto-js": "^4.2.0",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "eslint": "^10.0.0",
+    "eslint-config-google": "^0.14.0",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.8.1"
+  }
+}

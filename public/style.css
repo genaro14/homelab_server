@@ -1,0 +1,664 @@
+/* =============================================
+   CSS Variables
+   ============================================= */
+:root {
+  --color-bg: #121212;
+  --color-surface: #1e1e1e;
+  --color-surface-alt: #2a2a2a;
+  --color-primary: #bb86fc;
+  --color-primary-hover: #9a67ea;
+  --color-text: #e0e0e0;
+  --color-text-muted: #888;
+  --color-error: #cf6679;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-card-lg: 0 6px 24px rgba(0, 0, 0, 0.6);
+  --transition-fast: 0.2s ease;
+}
+
+/* =============================================
+   Base Styles
+   ============================================= */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Roboto", sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+  min-height: 100vh;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* =============================================
+   Buttons
+   ============================================= */
+.btn {
+  padding: 12px 16px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.btn--primary {
+  width: 100%;
+  background: var(--color-primary);
+  color: #000;
+}
+
+.btn--primary:hover {
+  background: var(--color-primary-hover);
+}
+
+.btn--logout {
+  background: var(--color-error);
+  color: #fff;
+  padding: 8px 16px;
+}
+
+.btn--logout:hover {
+  background: var(--color-primary-hover);
+}
+
+.btn--icon {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+  font-size: 16px;
+  border-radius: var(--radius-sm);
+}
+
+.btn--icon:hover {
+  background: var(--color-primary);
+  color: #000;
+}
+
+/* =============================================
+   Auth Section
+   ============================================= */
+.auth-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.auth-card {
+  background: var(--color-surface);
+  padding: 2rem;
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 400px;
+  box-shadow: var(--shadow-card-lg);
+}
+
+.auth-title {
+  text-align: center;
+  margin: 0 0 1.5rem;
+  font-size: 1.5rem;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.auth-form input {
+  width: 100%;
+  padding: 12px;
+  background: var(--color-surface-alt);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: 14px;
+}
+
+.auth-form input:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
+.auth-error {
+  color: var(--color-error);
+  text-align: center;
+  margin: 0;
+  font-size: 14px;
+}
+
+/* =============================================
+   Dashboard Section
+   ============================================= */
+.dashboard-section {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-surface-alt);
+}
+
+.navbar__title {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--color-primary);
+}
+
+.dashboard-content {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* =============================================
+   Widgets Container
+   ============================================= */
+.widgets {
+  display: flex;
+  gap: 40px;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 1000px;
+  margin: 0 auto 20px;
+}
+
+.widget {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  box-shadow: var(--shadow-card);
+}
+
+/* =============================================
+   Calendar Widget
+   ============================================= */
+.widget--calendar {
+  width: 280px;
+}
+
+.widget__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.widget__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.widget__nav {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: var(--color-surface-alt);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: 14px;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.widget__nav:hover {
+  background: var(--color-primary);
+  color: #000;
+}
+
+.calendar__weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin-bottom: 8px;
+}
+
+.calendar__days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.calendar__days span {
+  text-align: center;
+  padding: 8px 0;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+}
+
+.calendar__day--today {
+  background: var(--color-primary);
+  color: #000;
+  font-weight: 500;
+}
+
+.calendar__day--other {
+  color: #555;
+}
+
+/* =============================================
+   Weather Widget
+   ============================================= */
+.widget--weather {
+  width: 160px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.weather__city {
+  font-size: 14px;
+  color: var(--color-text-muted);
+  margin: 0 0 8px;
+}
+
+.weather__temp {
+  font-size: 42px;
+  font-weight: 500;
+  color: var(--color-primary);
+  margin: 0;
+}
+
+.weather__desc {
+  font-size: 14px;
+  margin: 8px 0 0;
+  color: var(--color-text);
+}
+
+/* =============================================
+   Domain Navigation
+   ============================================= */
+.domain-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 400px;
+}
+
+.domain-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.domain-btn:hover {
+  background: var(--color-primary);
+  color: #000;
+  transform: translateX(4px);
+}
+
+.domain-btn__icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.domain-btn__icon--fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background: var(--color-primary);
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #000;
+  flex-shrink: 0;
+}
+
+/* =============================================
+   Section Titles
+   ============================================= */
+.section-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  margin: 0 0 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* =============================================
+   Main Content Layout
+   ============================================= */
+.main-content {
+  display: flex;
+  gap: 40px;
+  justify-content: center;
+  align-items: flex-start;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+/* =============================================
+   Proxmox Section
+   ============================================= */
+.pve-section {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  box-shadow: var(--shadow-card);
+  width: 600px;
+  flex-shrink: 0;
+}
+
+.pve-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.pve-header__title {
+  font-size: 16px;
+  font-weight: 500;
+  margin: 0;
+}
+
+.pve-status__loading,
+.pve-status__error {
+  color: var(--color-text-muted);
+  font-size: 14px;
+  margin: 0;
+}
+
+.pve-status__error {
+  color: var(--color-error);
+}
+
+.pve-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.pve-node {
+  background: var(--color-surface-alt);
+  border-radius: var(--radius-md);
+  padding: 12px;
+}
+
+.pve-node__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.pve-node__name {
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.pve-node__status {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: #22c55e;
+  color: #000;
+  text-transform: uppercase;
+}
+
+.pve-node__status--offline {
+  background: var(--color-error);
+  color: #fff;
+}
+
+/* Radial Gauges */
+.pve-gauges {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.pve-gauge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.pve-gauge__circle {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: conic-gradient(
+    var(--color-primary) calc(var(--percent) * 3.6deg),
+    var(--color-surface-alt) calc(var(--percent) * 3.6deg)
+  );
+  position: relative;
+}
+
+.pve-gauge__circle::before {
+  content: "";
+  position: absolute;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--color-surface);
+}
+
+.pve-gauge__value {
+  position: relative;
+  z-index: 1;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.pve-gauge__label {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.pve-gauge__detail {
+  font-size: 10px;
+  color: var(--color-text-muted);
+}
+
+.pve-gauge--warning .pve-gauge__circle {
+  background: conic-gradient(
+    #f59e0b calc(var(--percent) * 3.6deg),
+    var(--color-surface-alt) calc(var(--percent) * 3.6deg)
+  );
+}
+
+.pve-gauge--danger .pve-gauge__circle {
+  background: conic-gradient(
+    var(--color-error) calc(var(--percent) * 3.6deg),
+    var(--color-surface-alt) calc(var(--percent) * 3.6deg)
+  );
+}
+
+/* Node Info */
+.pve-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-surface-alt);
+}
+
+.pve-info__item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+}
+
+.pve-info__label {
+  color: var(--color-text-muted);
+}
+
+.pve-info__value {
+  color: var(--color-text);
+  text-align: right;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pve-node__stats {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pve-stat {
+  font-size: 12px;
+}
+
+.pve-stat__header {
+  display: flex;
+  justify-content: space-between;
+  color: var(--color-text-muted);
+  margin-bottom: 4px;
+}
+
+.pve-stat__value {
+  color: var(--color-text);
+}
+
+.pve-stat__detail {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  margin-bottom: 4px;
+  display: block;
+}
+
+.pve-stat__bar {
+  height: 4px;
+  background: var(--color-bg);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.pve-stat__fill {
+  height: 100%;
+  background: var(--color-primary);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.pve-stat__fill--warning {
+  background: #f59e0b;
+}
+
+.pve-stat__fill--danger {
+  background: var(--color-error);
+}
+
+.pve-vms {
+  margin-top: 16px;
+}
+
+.pve-vms__title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  margin: 0 0 8px;
+}
+
+.pve-vm-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pve-vm {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  background: var(--color-surface);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+}
+
+.pve-vm__name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pve-vm__indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-text-muted);
+}
+
+.pve-vm__indicator--running {
+  background: #22c55e;
+}
+
+.pve-vm__indicator--stopped {
+  background: var(--color-error);
+}
+
+.pve-vm__resources {
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+/* =============================================
+   Domains Section
+   ============================================= */
+.domains-section {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  box-shadow: var(--shadow-card);
+  width: 300px;
+  flex-shrink: 0;
+}
+
+/* =============================================
+   Error State
+   ============================================= */
+.error-message {
+  color: var(--color-error);
+  text-align: center;
+}
