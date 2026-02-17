@@ -15,18 +15,24 @@ app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, "../public")));
 app.use(require("cors")());
 
-const USER = "root";
-const PASSWORD_HASH = crypto.createHash("sha256").update("purple123").digest("hex");
+// Load main config
+function loadConfig() {
+  try {
+    const configPath = path.join(__dirname, "../config/config.json");
+    return JSON.parse(fs.readFileSync(configPath, "utf-8"));
+  } catch (err) {
+    console.error("Failed to load config.json:", err.message);
+    return null;
+  }
+}
+
+const config = loadConfig();
+const USER = config?.user || "root";
+const PASSWORD_HASH = crypto.createHash("sha256").update(config?.password || "").digest("hex");
 
 // Load Proxmox config
 function loadPveConfig() {
-  try {
-    const filePath = path.join(__dirname, "pve.json");
-    return JSON.parse(fs.readFileSync(filePath, "utf-8"));
-  } catch (err) {
-    console.error("Failed to load pve.json:", err.message);
-    return null;
-  }
+  return config?.pve || null;
 }
 
 function deriveKey(password) {
@@ -52,7 +58,7 @@ app.get("/domains", (req, res) => {
     const { sessionKey } = req.query;
     if (!sessionKey) return res.status(400).json({ success: false, message: "Missing sessionKey" });
 
-    const filePath = path.join(__dirname, "domains.json");
+    const filePath = path.join(__dirname, "../config/domains.json");
     const domains = JSON.parse(fs.readFileSync(filePath, "utf-8"));
 
     const encrypted = CryptoJS.AES.encrypt(JSON.stringify(domains), sessionKey).toString();
@@ -253,17 +259,7 @@ function pveRequest(host, apiPath, tokenId, tokenSecret, verifySsl) {
 
 // Load Home Assistant config
 function loadHassConfig() {
-  try {
-    const configPath = path.join(__dirname, "hass.json");
-    const tokenPath = path.join(__dirname, "hass_token.json");
-    const config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
-    const tokenData = JSON.parse(fs.readFileSync(tokenPath, "utf-8"));
-    config.token = tokenData.token;
-    return config;
-  } catch (err) {
-    console.error("Failed to load hass config:", err.message);
-    return null;
-  }
+  return config?.hass || null;
 }
 
 // Home Assistant API endpoint for power meter

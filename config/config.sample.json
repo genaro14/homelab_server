@@ -1,0 +1,16 @@
+{
+  "user": "your_username",
+  "password": "your_password",
+  "pve": {
+    "host": "https://pve.example.com",
+    "tokenId": "api@pve!token",
+    "tokenSecret": "your-token-secret",
+    "node": "node-name",
+    "verifySsl": false
+  },
+  "hass": {
+    "host": "http://homeassistant.local:8123",
+    "entityId": "sensor.power_meter",
+    "token": "your-hass-long-lived-token"
+  }
+}

@@ -144,7 +144,6 @@ vite.config.ts.timestamp-*
 .vite/
 
 # Project specific - sensitive config files
-src/pve.json
-src/domains.json
-src/hass.json
-src/hass_token.json
+config/domains.json
+config/config.json
+!config/*.sample.json
