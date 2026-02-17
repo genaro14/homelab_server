@@ -11,21 +11,40 @@ npm install
 npm run dev
 ```
 
-## Environment Variables
+## Configuration
 
-- `PVE_HOST` - Proxmox host URL
-- `PVE_TOKEN_ID` - Proxmox API token ID
-- `PVE_TOKEN_SECRET` - Proxmox API token secret
-- `PVE_NODE` - Proxmox node name
-- `WEATHER_API_KEY` - OpenWeatherMap API key
-## 
-Populate env sample files with your credentials and run the app
+Copy the sample config files and edit with your credentials:
 
-+ `/src/pve.json` for PVE credentials
-+ `/scr/domains.json` for domain list  
+```bash
+cp config/config.sample.json config/config.json
+cp config/domains.sample.json config/domains.json
+```
 
-See samples for data example
-+ Default User: 'root' and Password: 'purple123', change them in `/src/server.js`
+### config/config.json
+
+| Field | Description |
+|-------|-------------|
+| `user` | Login username |
+| `password` | Login password |
+| `pve.host` | Proxmox host URL |
+| `pve.tokenId` | Proxmox API token ID |
+| `pve.tokenSecret` | Proxmox API token secret |
+| `pve.node` | Proxmox node name |
+| `pve.verifySsl` | Verify SSL certificate |
+| `hass.host` | Home Assistant URL |
+| `hass.entityId` | Power meter entity ID |
+| `hass.token` | Home Assistant long-lived access token |
+
+### config/domains.json
+
+Array of domain links to display on the dashboard:
+
+```json
+[
+  {"name": "Example", "url": "https://example.com", "icon": "https://example.com/favicon.png"}
+]
+```
+
 ## Docker
 
 ```bash
