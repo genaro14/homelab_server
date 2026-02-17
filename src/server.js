@@ -88,7 +88,6 @@ app.get("/api/pve/status", async (req, res) => {
       if (node.isRunning) {
         try {
           const nodeStatus = await pveRequest(host, `/api2/json/nodes/${node.name}/status`, tokenId, tokenSecret, verifySsl);
-          console.log(`Node ${node.name} thermalstate:`, nodeStatus.thermalstate);
           node.thermalstate = nodeStatus.thermalstate || null;
           node.cpuinfo = nodeStatus.cpuinfo || null;
         } catch (e) {
@@ -221,8 +220,6 @@ function pveRequest(host, apiPath, tokenId, tokenSecret, verifySsl) {
       rejectUnauthorized: verifySsl !== false,
     };
 
-    console.log(`PVE Request: ${url.hostname}${url.pathname}`);
-
     const req = client.request(options, (response) => {
       let data = "";
       response.on("data", (chunk) => (data += chunk));
@@ -254,12 +251,88 @@ function pveRequest(host, apiPath, tokenId, tokenSecret, verifySsl) {
   });
 }
 
+// Load Home Assistant config
+function loadHassConfig() {
+  try {
+    const configPath = path.join(__dirname, "hass.json");
+    const tokenPath = path.join(__dirname, "hass_token.json");
+    const config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+    const tokenData = JSON.parse(fs.readFileSync(tokenPath, "utf-8"));
+    config.token = tokenData.token;
+    return config;
+  } catch (err) {
+    console.error("Failed to load hass config:", err.message);
+    return null;
+  }
+}
+
+// Home Assistant API endpoint for power meter
+app.get("/api/hass/power", async (req, res) => {
+  const { sessionKey } = req.query;
+  if (!sessionKey) return res.status(401).json({ success: false, message: "Unauthorized" });
+
+  const hassConfig = loadHassConfig();
+  if (!hassConfig) {
+    return res.status(500).json({ success: false, message: "Home Assistant not configured" });
+  }
+
+  try {
+    const { host, token, entityId } = hassConfig;
+    const data = await hassRequest(host, `/api/states/${entityId}`, token);
+    res.json({ success: true, data });
+  } catch (err) {
+    console.error("Home Assistant API error:", err.message);
+    res.status(500).json({ success: false, message: "Failed to fetch power data" });
+  }
+});
+
+// Home Assistant API request helper
+function hassRequest(host, apiPath, token) {
+  return new Promise((resolve, reject) => {
+    const url = new URL(apiPath, host);
+    const isHttps = url.protocol === "https:";
+    const client = isHttps ? https : http;
+
+    const options = {
+      hostname: url.hostname,
+      port: url.port || (isHttps ? 443 : 80),
+      path: url.pathname,
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    };
+
+    const req = client.request(options, (response) => {
+      let data = "";
+      response.on("data", (chunk) => (data += chunk));
+      response.on("end", () => {
+        if (response.statusCode !== 200) {
+          reject(new Error(`HTTP ${response.statusCode}`));
+          return;
+        }
+        try {
+          resolve(JSON.parse(data));
+        } catch (e) {
+          reject(new Error("Invalid JSON response"));
+        }
+      });
+    });
+
+    req.on("error", reject);
+    req.setTimeout(10000, () => {
+      req.destroy();
+      reject(new Error("Request timeout"));
+    });
+    req.end();
+  });
+}
+
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "../public/index.html"));
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
-});
+app.listen(PORT);
 
 module.exports = app;

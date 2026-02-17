@@ -48,6 +48,10 @@
     // Proxmox
     pveStatus: document.getElementById("pveStatus"),
     pveRefresh: document.getElementById("pveRefresh"),
+
+    // Power Meter
+    powerValue: document.getElementById("powerValue"),
+    powerUnit: document.getElementById("powerUnit"),
   };
 
   // =========================================================================
@@ -99,6 +103,13 @@
 
     async fetchPveStatus(sessionKey) {
       const res = await fetch(`/api/pve/status?sessionKey=${encodeURIComponent(sessionKey)}`);
+      const result = await res.json();
+      if (!res.ok || !result.success) throw new Error(result.message || "Failed to fetch");
+      return result.data;
+    },
+
+    async fetchPowerMeter(sessionKey) {
+      const res = await fetch(`/api/hass/power?sessionKey=${encodeURIComponent(sessionKey)}`);
       const result = await res.json();
       if (!res.ok || !result.success) throw new Error(result.message || "Failed to fetch");
       return result.data;
@@ -286,6 +297,51 @@
         elements.weatherTemp.textContent = "--°C";
         elements.weatherDesc.textContent = "Unable to load";
       }
+    },
+  };
+
+  // =========================================================================
+  // Power Meter Widget
+  // =========================================================================
+  const PowerMeterWidget = {
+    sessionKey: null,
+    refreshInterval: null,
+    REFRESH_INTERVAL_MS: 10000,
+
+    init(sessionKey) {
+      this.sessionKey = sessionKey;
+      this.refresh();
+      this.startAutoRefresh();
+    },
+
+    startAutoRefresh() {
+      if (this.refreshInterval) clearInterval(this.refreshInterval);
+      this.refreshInterval = setInterval(() => this.refresh(), this.REFRESH_INTERVAL_MS);
+    },
+
+    stopAutoRefresh() {
+      if (this.refreshInterval) {
+        clearInterval(this.refreshInterval);
+        this.refreshInterval = null;
+      }
+    },
+
+    async refresh() {
+      try {
+        const data = await ApiService.fetchPowerMeter(this.sessionKey);
+        this.render(data);
+      } catch (err) {
+        console.error("Power meter fetch error:", err);
+        elements.powerValue.textContent = "--";
+        elements.powerUnit.textContent = "W";
+      }
+    },
+
+    render(data) {
+      const power = parseFloat(data.state);
+      const unit = data.attributes?.unit_of_measurement || "W";
+      elements.powerValue.textContent = isNaN(power) ? "--" : power.toFixed(1);
+      elements.powerUnit.textContent = unit;
     },
   };
 
@@ -562,6 +618,7 @@
       CalendarWidget.init();
       WeatherWidget.init();
       ProxmoxWidget.init(sessionKey);
+      PowerMeterWidget.init(sessionKey);
 
       try {
         const domains = await ApiService.fetchDomains(sessionKey);

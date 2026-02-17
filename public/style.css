@@ -298,6 +298,36 @@ body {
 }
 
 /* =============================================
+   Power Meter Widget
+   ============================================= */
+.widget--power {
+  width: 140px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.power__label {
+  font-size: 14px;
+  color: var(--color-text-muted);
+  margin: 0 0 8px;
+}
+
+.power__value {
+  font-size: 42px;
+  font-weight: 500;
+  color: var(--color-primary);
+  margin: 0;
+}
+
+.power__unit {
+  font-size: 14px;
+  margin: 8px 0 0;
+  color: var(--color-text);
+}
+
+/* =============================================
    Domain Navigation
    ============================================= */
 .domain-nav {
